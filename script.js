@@ -17,9 +17,15 @@ class APIPlayground {
 
     bindEvents() {
         // Send request
-        document.getElementById('sendBtn').addEventListener('click', () => this.sendRequest());
+        document.getElementById('sendBtn').addEventListener('click', () => {
+            const useProxy = document.getElementById('useProxy').checked;
+            this.sendRequest(useProxy);
+        });
         document.getElementById('url').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') this.sendRequest();
+            if (e.key === 'Enter') {
+                const useProxy = document.getElementById('useProxy').checked;
+                this.sendRequest(useProxy);
+            }
         });
 
         // Clear
@@ -67,15 +73,22 @@ class APIPlayground {
         };
     }
 
-    async sendRequest() {
-        const url = document.getElementById('url').value.trim();
+    async sendRequest(useProxy = false) {
+        const originalUrl = document.getElementById('url').value.trim();
         const method = document.getElementById('method').value;
         const headersText = document.getElementById('headers').value.trim();
         const bodyText = document.getElementById('body').value.trim();
 
-        if (!url) {
+        if (!originalUrl) {
             alert('Masukkan URL terlebih dahulu!');
             return;
+        }
+
+        // Build URL with proxy if needed
+        let url = originalUrl;
+        if (useProxy) {
+            // Use public CORS proxy (for testing only)
+            url = `https://cors-anywhere.herokuapp.com/${originalUrl}`;
         }
 
         // Parse headers
@@ -140,14 +153,22 @@ class APIPlayground {
                 headers: responseHeaders,
                 body: responseBody,
                 duration: duration,
-                size: JSON.stringify(responseBody).length
+                size: JSON.stringify(responseBody).length,
+                usedProxy: useProxy
             });
 
             // Save to history
-            this.saveToHistory({ url, method, headers, body, response: { status: response.status, size: JSON.stringify(responseBody).length } });
+            this.saveToHistory({ 
+                url: originalUrl, 
+                method, 
+                headers, 
+                body, 
+                response: { status: response.status, size: JSON.stringify(responseBody).length },
+                usedProxy 
+            });
 
         } catch (error) {
-            this.displayError(error);
+            this.displayError(error, useProxy);
         } finally {
             document.getElementById('sendBtn').disabled = false;
             document.getElementById('sendBtn').innerHTML = '<i class="fas fa-play"></i> Send';
@@ -157,7 +178,11 @@ class APIPlayground {
     displayResponse(data) {
         // Status
         const statusEl = document.getElementById('statusCode');
-        statusEl.textContent = `${data.status} ${data.statusText}`;
+        let statusText = `${data.status} ${data.statusText}`;
+        if (data.usedProxy) {
+            statusText += ' [PROXY]';
+        }
+        statusEl.textContent = statusText;
         statusEl.className = 'text-xl font-bold ' + (data.status >= 200 && data.status < 300 ? 'text-green-400' : data.status >= 400 ? 'text-red-400' : 'text-yellow-400');
 
         // Meta
@@ -174,7 +199,7 @@ class APIPlayground {
         this.switchTab('body');
     }
 
-    displayError(error) {
+    displayError(error, usedProxy = false) {
         const statusEl = document.getElementById('statusCode');
         statusEl.textContent = 'ERROR';
         statusEl.className = 'text-xl font-bold text-red-400';
@@ -182,7 +207,25 @@ class APIPlayground {
         document.getElementById('responseTime').textContent = '-';
         document.getElementById('responseSize').textContent = '-';
 
-        document.getElementById('responseBody').textContent = error.message;
+        let errorMessage = error.message;
+        
+        // Check for CORS error
+        if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+            errorMessage = `Network error - CORS policy may be blocking this request.\n\n` +
+                          `Origin: https://personalbotai.github.io\n` +
+                          `Target: ${document.getElementById('url').value}\n\n` +
+                          `SOLUTIONS:\n` +
+                          `1. Use an API that supports CORS (try: https://jsonplaceholder.typicode.com/posts/1)\n` +
+                          `2. Enable "Use CORS Proxy" checkbox below\n` +
+                          `3. If you control the API, add header: Access-Control-Allow-Origin: *\n` +
+                          `4. Test in browser with CORS extension disabled (dev only)`;
+        }
+
+        if (usedProxy) {
+            errorMessage = `[PROXY MODE] ${errorMessage}`;
+        }
+
+        document.getElementById('responseBody').textContent = errorMessage;
         document.getElementById('responseHeaders').textContent = 'No headers (request failed)';
 
         this.switchTab('body');

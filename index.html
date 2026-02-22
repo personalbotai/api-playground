@@ -66,6 +66,14 @@
                 </div>
 
                 <div class="mb-4">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="useProxy" class="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-600">
+                        <span class="text-sm text-gray-300">Use CORS Proxy (for testing only)</span>
+                    </label>
+                    <p class="text-xs text-gray-400 mt-1">Enable if you get CORS errors. Uses public proxy - rate limited.</p>
+                </div>
+
+                <div class="mb-4">
                     <label class="block text-sm font-medium mb-2">Headers (JSON format)</label>
                     <textarea id="headers" rows="3" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm" placeholder='{"Content-Type": "application/json", "Authorization": "Bearer token"}'></textarea>
                 </div>
@@ -159,6 +167,20 @@
                <a href="https://github.com/sipeed/picoclaw" target="_blank" class="text-blue-400 hover:underline">GitHub</a> | 
                <button id="clearAllBtn" class="text-red-400 hover:underline ml-2">Clear All Data</button>
             </p>
+            <div class="mt-4 p-4 bg-gray-800 rounded-lg max-w-2xl mx-auto text-left">
+                <h3 class="font-semibold text-white mb-2 flex items-center gap-2">
+                    <i class="fas fa-question-circle text-yellow-500"></i> CORS Troubleshooting
+                </h3>
+                <p class="text-sm text-gray-300 mb-2">
+                    <strong>CORS (Cross-Origin Resource Sharing)</strong> adalah keamanan browser yang membedakan request dari domain yang berbeda.
+                </p>
+                <ul class="text-sm text-gray-300 list-disc list-inside space-y-1">
+                    <li><strong>Gunakan API yang support CORS:</strong> https://jsonplaceholder.typicode.com</li>
+                    <li><strong>Checkbox "Use CORS Proxy":</strong> Bypass CORS via proxy publik (rate limited)</li>
+                    <li><strong>Jika Anda mengendalikan API:</strong> Tambahkan header <code class="bg-gray-900 px-1 rounded">Access-Control-Allow-Origin: *</code></li>
+                    <li><strong>Browser extension:</strong> "Allow CORS" untuk testing lokal (disable setelah selesai)</li>
+                </ul>
+            </div>
         </footer>
     </div>
 
