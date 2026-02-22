@@ -46,10 +46,12 @@ class APIPlayground {
             btn.addEventListener('click', (e) => this.switchTab(e.target.dataset.tab));
         });
 
-        // Modal
-        const modal = document.getElementById('curlModal');
-        document.querySelector('.close').onclick = () => modal.style.display = 'none';
-        document.querySelector('.close-modal').onclick = () => modal.style.display = 'none';
+        // Modal - using event delegation
+        document.getElementById('curlModal').addEventListener('click', (e) => {
+            if (e.target.classList.contains('close') || e.target.classList.contains('close-modal')) {
+                e.target.closest('.modal').style.display = 'none';
+            }
+        });
         document.getElementById('copyModalBtn').addEventListener('click', () => this.copyToClipboard('curlModalContent'));
 
         // Copy cURL from tab
@@ -60,6 +62,7 @@ class APIPlayground {
 
         // Close modal on outside click
         window.onclick = (e) => {
+            const modal = document.getElementById('curlModal');
             if (e.target == modal) modal.style.display = 'none';
         };
     }
@@ -155,7 +158,7 @@ class APIPlayground {
         // Status
         const statusEl = document.getElementById('statusCode');
         statusEl.textContent = `${data.status} ${data.statusText}`;
-        statusEl.className = 'value ' + (data.status >= 200 && data.status < 300 ? 'success' : data.status >= 400 ? 'error' : 'warning');
+        statusEl.className = 'text-xl font-bold ' + (data.status >= 200 && data.status < 300 ? 'text-green-400' : data.status >= 400 ? 'text-red-400' : 'text-yellow-400');
 
         // Meta
         document.getElementById('responseTime').textContent = `${data.duration} ms`;
@@ -174,7 +177,7 @@ class APIPlayground {
     displayError(error) {
         const statusEl = document.getElementById('statusCode');
         statusEl.textContent = 'ERROR';
-        statusEl.className = 'value error';
+        statusEl.className = 'text-xl font-bold text-red-400';
 
         document.getElementById('responseTime').textContent = '-';
         document.getElementById('responseSize').textContent = '-';
@@ -238,6 +241,7 @@ class APIPlayground {
         });
         document.querySelectorAll('.tab-content').forEach(content => {
             content.classList.toggle('active', content.id === `${tabName}-tab`);
+            content.classList.toggle('hidden', content.id !== `${tabName}-tab`);
         });
     }
 
@@ -263,22 +267,22 @@ class APIPlayground {
     renderCollections() {
         const container = document.getElementById('collectionsList');
         if (this.collections.length === 0) {
-            container.innerHTML = '<p class="empty-message">No saved collections yet. Save requests to reuse them.</p>';
+            container.innerHTML = '<p class="text-gray-400 text-center py-8">No saved collections yet. Save requests to reuse them.</p>';
             return;
         }
 
         container.innerHTML = this.collections.map((item, index) => `
-            <div class="collection-item">
-                <div class="collection-info">
-                    <h4>${this.escapeHtml(item.name)}</h4>
-                    <p>${item.method} ${this.escapeHtml(item.url)}</p>
-                    <small>${new Date(item.savedAt).toLocaleString()}</small>
+            <div class="bg-gray-700 rounded-lg p-4 mb-3 flex justify-between items-center">
+                <div>
+                    <h4 class="font-semibold text-white">${this.escapeHtml(item.name)}</h4>
+                    <p class="text-sm text-gray-300">${item.method} ${this.escapeHtml(item.url)}</p>
+                    <small class="text-gray-400">${new Date(item.savedAt).toLocaleString()}</small>
                 </div>
-                <div class="collection-actions">
-                    <button class="btn btn-primary btn-small" onclick="app.loadCollection(${index})">
+                <div class="flex gap-2">
+                    <button class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm flex items-center gap-1" onclick="app.loadCollection(${index})">
                         <i class="fas fa-folder-open"></i> Load
                     </button>
-                    <button class="btn btn-danger btn-small" onclick="app.deleteCollection(${index})">
+                    <button class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm flex items-center gap-1" onclick="app.deleteCollection(${index})">
                         <i class="fas fa-trash"></i> Delete
                     </button>
                 </div>
